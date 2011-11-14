@@ -6,6 +6,7 @@ import (
 		"http"
 		"os"
 		"strconv"
+		"time"
 )
 
 var urlString = flag.String("u", "", "-u https://bucket.s3.amazonaws.com/key")
@@ -62,13 +63,13 @@ func downloadFile(url string, connectionCount int, segmentCount int) {
 
 		finCount := 0
 		for i := range finChan {
-				fmt.Printf("Segment %v finished\n", i)
+				fmt.Printf("Segment %v DONE %v\n", i, time.UTC().Format(time.RFC3339))
 				finCount++
 				if finCount == segmentCount {
 						break
 				}
 		}
-		fmt.Println("Download finished!")
+		fmt.Printf("Download finished! %v\n", time.UTC().Format(time.RFC3339))
 }
 
 type Download struct {
@@ -91,7 +92,7 @@ func downloadConnection(download Download, rem chan int, fin chan int) {
 						offsetEnd = ((n+1) * download.SegmentSize() - 1)
 				}
 
-				fmt.Printf("Segment %v starting\n", n)
+				fmt.Printf("Segment %v BEGIN %v\n", n, time.UTC().Format(time.RFC3339))
 				req, _ := http.NewRequest("GET", download.url, nil)
 				req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", offsetStart, offsetEnd))
 
