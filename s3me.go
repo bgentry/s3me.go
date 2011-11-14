@@ -10,6 +10,7 @@ import (
 )
 
 var urlString = flag.String("u", "", "-u https://bucket.s3.amazonaws.com/key")
+var outputPath = flag.String("o", "./output", "-o ./output")
 var segments = flag.Int("s", 0, "-s 8")
 var connections = flag.Int("c", 1, "-c 4")
 
@@ -22,10 +23,10 @@ func main() {
 		if *segments == 0 || *segments < *connections {
 				*segments = *connections
 		}
-		downloadFile(*urlString, *connections, *segments)
+		downloadFile(*urlString, *outputPath, *connections, *segments)
 }
 
-func downloadFile(url string, connectionCount int, segmentCount int) {
+func downloadFile(url string, filename string, connectionCount int, segmentCount int) {
 		fmt.Printf("Fetching HEAD from %p\n", url)
 		resp, err := http.Head(url)
 		if err != nil {
@@ -48,7 +49,6 @@ func downloadFile(url string, connectionCount int, segmentCount int) {
 		close(remainingChan)
 
 		// Open file for writing
-		filename := "./output"
 		file, err := os.OpenFile(filename, os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0600)
 		if err != nil {
 				panic(fmt.Sprintf("Error opening %v\n", filename))
