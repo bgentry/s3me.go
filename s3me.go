@@ -10,9 +10,9 @@ import (
 )
 
 var urlString = flag.String("u", "", "-u https://bucket.s3.amazonaws.com/key")
-var outputPath = flag.String("o", "./output", "-o ./output")
-var segments = flag.Int("s", 0, "-s 8")
-var connections = flag.Int("c", 1, "-c 4")
+var outputPath = flag.String("o", "./output", "Output path")
+var segments = flag.Int("s", 0, "Number of segments")
+var connections = flag.Int("c", 1, "Number of connections")
 
 func main() {
 		flag.Parse()
