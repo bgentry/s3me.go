@@ -101,21 +101,11 @@ func downloadConnection(download Download, rem chan int, fin chan int) {
 				buf := make([]byte, 2048)
 				writeOffset := offsetStart
 				for {
-// 						select {
-// 						case state := <-sc:
-// 								if state != StateDownloading {
-// 										return
-// 								}
-// 						default:
-// 						}
-
-						// Read and write here...
 						n_bytes, err := rsp.Body.Read(buf[0:])
 						if err != nil {
 								if err == os.EOF {
 										break
 								}
-// 								return "", err  // f will be closed if we return here.
 								panic(err)
 						}
 						nWritten, _ := download.file.WriteAt(buf[0:n_bytes], int64(writeOffset))
