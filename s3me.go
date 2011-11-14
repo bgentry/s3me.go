@@ -38,7 +38,6 @@ func downloadFile(url string, connectionCount int, segmentCount int) {
 				fmt.Printf("Invalid Content-Length: %p\n", err)
 				os.Exit(1)
 		}
-		download := Download{url, fileSize, segmentCount}
 
 		remainingChan := make(chan int, segmentCount)
 		finChan := make(chan int, segmentCount)
@@ -47,6 +46,16 @@ func downloadFile(url string, connectionCount int, segmentCount int) {
 		}
 		close(remainingChan)
 
+		// Open file for writing
+		filename := "./output"
+		file, err := os.OpenFile(filename, os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0600)
+		if err != nil {
+				panic(fmt.Sprintf("Error opening %v\n", filename))
+		}
+		defer file.Close()
+
+		download := Download{url, file, fileSize, segmentCount}
+		// Initiate downloads
 		for i := 0; i < connectionCount; i++ {
 				go downloadConnection(download, remainingChan, finChan)
 		}
@@ -64,6 +73,7 @@ func downloadFile(url string, connectionCount int, segmentCount int) {
 
 type Download struct {
 	url string
+	file *os.File
 	size int
 	segments int
 }
@@ -81,13 +91,6 @@ func downloadConnection(download Download, rem chan int, fin chan int) {
 						offsetEnd = ((n+1) * download.SegmentSize() - 1)
 				}
 
-				filename := fmt.Sprintf("./segment%02d", n)
-				file, err := os.OpenFile(filename, os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0600)
-				if err != nil {
-						panic(fmt.Sprintf("Error opening %v\n", filename))
-				}
-				defer file.Close()
-
 				fmt.Printf("Segment %v starting\n", n)
 				req, _ := http.NewRequest("GET", download.url, nil)
 				req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", offsetStart, offsetEnd))
@@ -95,7 +98,8 @@ func downloadConnection(download Download, rem chan int, fin chan int) {
 				rsp, _ := c.Do(req)
 				defer rsp.Body.Close()
 
-				buf := make([]byte, 1000)
+				buf := make([]byte, 2048)
+				writeOffset := offsetStart
 				for {
 // 						select {
 // 						case state := <-sc:
@@ -114,7 +118,8 @@ func downloadConnection(download Download, rem chan int, fin chan int) {
 // 								return "", err  // f will be closed if we return here.
 								panic(err)
 						}
-						file.Write(buf[0:n_bytes])
+						nWritten, _ := download.file.WriteAt(buf[0:n_bytes], int64(writeOffset))
+						writeOffset += nWritten
 				}
 				fin <- n
 		}
