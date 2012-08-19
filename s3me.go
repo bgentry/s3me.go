@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -104,7 +105,7 @@ func downloadConnection(download Download, rem chan int, fin chan int) {
 		for {
 			n_bytes, err := rsp.Body.Read(buf[0:])
 			if err != nil {
-				if err == os.EOF {
+				if err == io.EOF {
 					break
 				}
 				panic(err)
