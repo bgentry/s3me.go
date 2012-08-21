@@ -3,7 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"http"
+	"io"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -63,13 +64,13 @@ func downloadFile(url string, filename string, connectionCount int, segmentCount
 
 	finCount := 0
 	for i := range finChan {
-		fmt.Printf("Segment %v DONE %v\n", i, time.UTC().Format(time.RFC3339))
+		fmt.Printf("Segment %v DONE %v\n", i, time.Now().UTC().Format(time.RFC3339))
 		finCount++
 		if finCount == segmentCount {
 			break
 		}
 	}
-	fmt.Printf("Download finished! %v\n", time.UTC().Format(time.RFC3339))
+	fmt.Printf("Download finished! %v\n", time.Now().UTC().Format(time.RFC3339))
 }
 
 type Download struct {
@@ -92,7 +93,7 @@ func downloadConnection(download Download, rem chan int, fin chan int) {
 			offsetEnd = ((n+1)*download.SegmentSize() - 1)
 		}
 
-		fmt.Printf("Segment %v BEGIN %v\n", n, time.UTC().Format(time.RFC3339))
+		fmt.Printf("Segment %v BEGIN %v\n", n, time.Now().UTC().Format(time.RFC3339))
 		req, _ := http.NewRequest("GET", download.url, nil)
 		req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", offsetStart, offsetEnd))
 
@@ -104,7 +105,7 @@ func downloadConnection(download Download, rem chan int, fin chan int) {
 		for {
 			n_bytes, err := rsp.Body.Read(buf[0:])
 			if err != nil {
-				if err == os.EOF {
+				if err == io.EOF {
 					break
 				}
 				panic(err)
